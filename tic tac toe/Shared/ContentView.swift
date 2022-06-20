@@ -17,7 +17,8 @@ struct ContentView: View {
                                GridItem(.flexible()),]
     
     @State private var moves :[Move?]=Array(repeating:nil, count: 9)
-    
+    @State private var isGameDisabeled = false
+    @State private var alertItem : AlertItem?
     
     var body: some View {
         GeometryReader{geometry in
@@ -44,11 +45,37 @@ struct ContentView: View {
                             if isCircleOccupied(in: moves, forIndex: i){ return }
                             moves[i]=Move(player : .human, boardIndex: i)
                             
+                            isGameDisabeled = true
+                            
                             //check on win condition
+                            if checkWinCondition(for: .human, in: moves) == true
+                            {
+                                print("human wins")
+                                return
+                            }
+                   
+                            if(checkForDraw(in: moves)){
+                                print("Draw")
+                                return
+                            }
                             DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
-                                
+                            
+                             isGameDisabeled = false
+
                                 let computerPosition=determineComputerMovePosition(in: moves)
                                 moves[computerPosition]=Move(player : .computer, boardIndex: computerPosition)
+                                
+                                if checkWinCondition(for: .computer, in: moves) == true
+                                {
+                                    print("computer wins")
+                                    return
+                                }
+                                
+                                if(checkForDraw(in: moves)){
+                                    print("Draw")
+                                    return
+                                }
+                                
                             }
                 
                             
@@ -57,7 +84,16 @@ struct ContentView: View {
                 }
                 Spacer()
             }
+            .disabled(isGameDisabeled)
             .padding()
+            .alert(item:$alertItem , content {alertItem in
+                
+                Alert(title: alertItem.title,
+                      message: alertItem.message,
+                      dismissButton: .default(alertItem.buttonTitle, action: resetGame{
+                    
+                }))
+            } )
 
     }
 }
@@ -75,6 +111,28 @@ struct ContentView: View {
         }
         return movePosition
     }
+    func checkWinCondition(for player: player, in moves: [Move?]) -> Bool{
+        
+        let winPatterns : Set<Set<Int>> = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]//posibilele combinatii pe tabla pentru a castiga
+        
+        let playMoves = moves.compactMap { $0 }.filter { $0.player == player }//linie care elimina toate valorile nule din array-ul de moves si apoi aplica un filtru care selecteaza doar miscarile care apartin unui jucator (computer sau user)
+        let playerPositions = Set(playMoves.map { $0.boardIndex })//pozitiile ale unui jucator
+        
+        for pattern in winPatterns where pattern.isSubset(of: playerPositions){
+            return true
+        }
+        
+        
+        return false
+    }
+    
+    func checkForDraw(in moves : [Move?]) -> Bool
+    {
+        return moves.compactMap { $0 }.count == 9
+        //daca toate pozitiile de pe tabla sunt ocupate
+    }
+    
+    func resetGame ()
 }
 
 
