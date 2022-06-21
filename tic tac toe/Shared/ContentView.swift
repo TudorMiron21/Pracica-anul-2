@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var moves :[Move?]=Array(repeating:nil, count: 9)
     @State private var isGameDisabeled = false
     @State private var alertItem : AlertItem?
+    @State private var currentPlayer :player?
     
     var body: some View {
         GeometryReader{geometry in
@@ -32,7 +33,7 @@ struct ContentView: View {
                         ZStack{
                             
                             Circle()
-                                .foregroundColor(.green).opacity(0.8)
+                                .foregroundColor(.green).opacity(0.5)
                                 .frame(width: geometry.size.width/3 - 15,
                                        height:geometry.size.height/5 - 35)
                             Image(systemName: moves[i]?.x_or_o ?? "")
@@ -42,22 +43,27 @@ struct ContentView: View {
                             
                         }
                         .onTapGesture {
+                            
                             if isCircleOccupied(in: moves, forIndex: i){ return }
                             moves[i]=Move(player : .human, boardIndex: i)
                             
-                            isGameDisabeled = true
                             
                             //check on win condition
                             if checkWinCondition(for: .human, in: moves) == true
                             {
-                                print("human wins")
+                                alertItem = AlertContext.humanWin
                                 return
                             }
                    
                             if(checkForDraw(in: moves)){
-                                print("Draw")
+                                alertItem = AlertContext.draw
                                 return
                             }
+                            
+                            
+                            isGameDisabeled = true
+                            
+                            
                             DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
                             
                              isGameDisabeled = false
@@ -67,12 +73,12 @@ struct ContentView: View {
                                 
                                 if checkWinCondition(for: .computer, in: moves) == true
                                 {
-                                    print("computer wins")
+                                    alertItem = AlertContext.computerWin
                                     return
                                 }
                                 
                                 if(checkForDraw(in: moves)){
-                                    print("Draw")
+                                    alertItem = AlertContext.draw
                                     return
                                 }
                                 
@@ -86,13 +92,11 @@ struct ContentView: View {
             }
             .disabled(isGameDisabeled)
             .padding()
-            .alert(item:$alertItem , content {alertItem in
+            .alert(item:$alertItem , content : {alertItem in
                 
                 Alert(title: alertItem.title,
-                      message: alertItem.message,
-                      dismissButton: .default(alertItem.buttonTitle, action: resetGame{
-                    
-                }))
+                     message: alertItem.message,
+                      dismissButton: .default(alertItem.buttonTitle, action: {resetGame()}))
             } )
 
     }
@@ -101,16 +105,87 @@ struct ContentView: View {
         return moves.contains(where :{$0?.boardIndex==index})
         }
     
+     func determineComputerMovePosition(in moves:[Move?]) -> Int{
+         
+       //  var movePosition=Int.random(in: 0..<9)
+        // while isCircleOccupied(in: moves, forIndex: movePosition)
+       //  {
+        //     movePosition=Int.random(in: 0..<9)
+        // }
+         //return movePosition
+         
+         if moves[4] == nil
+         {
+             return 4
+         }
+         else{
+             return minimax(in: moves,)
+            }
+         }
     
-    func determineComputerMovePosition(in moves:[Move?]) -> Int{
+    
+    
+    
+    func minimax(in moves: inout [Move?],player: player) -> Int
+    {
         
-        var movePosition=Int.random(in: 0..<9)
-        while isCircleOccupied(in: moves, forIndex: movePosition)
+    //      var movePosition=Int.random(in: 0..<9)
+    //      while isCircleOccupied(in: moves, forIndex: movePosition)
+     //     {
+     //        movePosition=Int.random(in: 0..<9)
+     //     }
+     //     return movePosition
+        
+        var maxPlayer : player = .computer
+        var minPlayer : player = .human
+        
+        
+        if checkWinCondition(for: minPlayer, in: moves)
         {
-            movePosition=Int.random(in: 0..<9)
+            return 1 + (9 - moves.compactMap { $0 }.count)
         }
-        return movePosition
+        else
+            if checkWinCondition(for: maxPlayer, in: moves)
+        {
+            return -(1 + (9 - moves.compactMap { $0 }.count))
+        }
+        else
+            if checkForDraw(in: moves)
+        {
+            return 0
+        }
+        
+        var best: Int?
+        
+        if player == maxPlayer
+        {
+             best = -999999
+        }
+        else{
+            best =  999999
+        }
+        
+        var i:Int=0
+        
+        for move in moves{
+            if(move == nil){
+                moves[i] = Move(player: player ,boardIndex: i)
+                var score: Int = minimax(in: &moves, player: minPlayer)
+                
+            }
+            i+=1
+            
+        }
+        
+        moves[i]=nil
+        
     }
+        
+        
+       
+        
+    }
+    
     func checkWinCondition(for player: player, in moves: [Move?]) -> Bool{
         
         let winPatterns : Set<Set<Int>> = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]//posibilele combinatii pe tabla pentru a castiga
@@ -132,9 +207,16 @@ struct ContentView: View {
         //daca toate pozitiile de pe tabla sunt ocupate
     }
     
-    func resetGame ()
+    func resetGame (){
+        moves = Array(repeating: nil, count: 9)
+        
+    }
 }
 
+struct state{
+    
+    
+}
 
 enum player
 {

@@ -18,12 +18,12 @@ struct AlertItem :Identifiable{
 
 struct AlertContext{
     
-    let humanWin = AlertItem(title: Text("YOU WIN!!"),
+   static let humanWin = AlertItem(title: Text("YOU WIN!!"),
                              message:Text("you are so smart"),
                              buttonTitle:Text("play again"))
-    let computerWin = AlertItem(title: Text("YOU LOSE!!"),
+   static let computerWin = AlertItem(title: Text("YOU LOSE!!"),
                              message:Text("No wory, you can play again"),
                              buttonTitle:Text("play again"))
-    let draw = AlertItem(title: Text("Draw!"),
+   static let draw = AlertItem(title: Text("Draw!"),
                              message:Text("Boring game"),
                              buttonTitle:Text("play again"))}
