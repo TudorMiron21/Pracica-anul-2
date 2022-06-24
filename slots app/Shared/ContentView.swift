@@ -147,6 +147,10 @@ struct ContentView: View {
                         
                         //
                         self.processResults(true)
+                            
+                            
+                        
+                        
         
                     } label: {
                         Text("Max Spin(5 X Spin)")
@@ -166,13 +170,12 @@ struct ContentView: View {
                 
             }
             
-        
             
         }
         
     }
     
-    func processResults(_ isMax:Bool = false){
+    func processResults(_ isMax:Bool = false)->Bool{
         
         if credits>0{
         self.backgrounds=self.backgrounds.map{ _ in Color.white }
@@ -192,28 +195,31 @@ struct ContentView: View {
             self.numbers[5] = Int.random(in: 0...self.symbols.count - 1 )
         }
         
-        processWin(isMax)
+        return processWin(isMax)
             
         }
         else{
             self.credits = 0
             
         }
+        return false
         
     }
     
-    func isMatch(_ index1: Int ,_ index2:Int,_ index3:Int) ->Bool{
+    func isMatch(_ index1: Int ,_ index2:Int,_ index3:Int, _ color :Color) ->Bool{
         
         if self.numbers[index1] == self.numbers[index2] && self.numbers[index2] == self.numbers[index3]{
-            self.backgrounds[index1] = Color.green
-            self.backgrounds[index2] = Color.green
-            self.backgrounds[index3] = Color.green
+            
+            self.backgrounds[index1] = color
+            self.backgrounds[index2] = color
+            self.backgrounds[index3] = color
+            return true
             
         }
         return false
     }
     
-    func processWin(_ isMax: Bool = false){
+    func processWin(_ isMax: Bool = false)->Bool{
         //check the matches
         
         var matches = 0
@@ -230,51 +236,70 @@ struct ContentView: View {
                 self.backgrounds[3] = Color.green
                 self.backgrounds[4] = Color.green
                 self.backgrounds[5] = Color.green
+                
             }
             else
             {
                 self.credits -= betAmount
             }
-        }else{
+            
+            }
+            else
+            {
             
             //processing for single spin
             
-            //top row
-            if isMatch(0, 1, 2){matches += 1}
+                //jackpot
+                 if isMatch(3, 4, 5, Color.red)  && isMatch(1, 4, 7, Color.red)
+                 {
+                     self.credits = self.credits * 4
+                     return true
+                 }
+                //top row
+                if isMatch(0, 1, 2,Color.green){ matches += 1 }
             //middle row
-            if isMatch(3, 4, 5){matches += 1}
+                if isMatch(3, 4, 5,Color.green){ matches += 1 }
             //last row
-            if isMatch(6, 7, 8){matches += 1}
+                if isMatch(6, 7, 8,Color.green){ matches += 1 }
             //first diagonal
-            if isMatch(0, 4, 8){matches += 1}
+                if isMatch(0, 4, 8,Color.green){ matches += 1 }
             //second diagonal
-            if isMatch(2, 4, 6){matches += 1}
+                if isMatch(2, 4, 6,Color.green){ matches += 1 }
             
-            //chech for number of matches
-            if matches > 0
-            {
-                self.credits += matches * betAmount * 5
-            }
-            
-            else if !isMax
-            {
-                //0 wins, single spin
-                self.credits -= betAmount
+          
+           
                 
-            }else
-            {
-                //0 wins, max spin
-                self.credits -= betAmount * 5
-            }
+
         }
         
+        if matches > 0
+        {
+            self.credits += matches * betAmount * 5
+        }
         
+        if !isMax && matches==0
+        {
+            //0 wins, single spin
+            self.credits -= betAmount
+            
+        }
+            else if isMax && matches==0
+                    
+        {
+            //0 wins, max spin
+            self.credits -= betAmount * 5
+        }
+        return false
     }
+    
 }
 
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        Group {
+            ContentView()
+            ContentView()
+        }
     }
 }
