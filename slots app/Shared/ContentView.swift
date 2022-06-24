@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     
-    @State private var credits = 10
+    @State private var credits = 1000
     @State private var symbols = ["apple","star","cherry"]
     @State private var numbers = Array(repeating: 0 , count: 9)
     @State private var backgrounds = Array(repeating: Color.white, count: 9)
@@ -109,9 +109,9 @@ struct ContentView: View {
                         
                         Spacer()
                         
-                        CardView(symbol: $symbols[numbers[0]],backround: $backgrounds[0])
-                        CardView(symbol: $symbols[numbers[1]],backround: $backgrounds[1])
-                        CardView(symbol: $symbols[numbers[2]],backround: $backgrounds[2])
+                        CardView(symbol: $symbols[numbers[3]],backround: $backgrounds[3])
+                        CardView(symbol: $symbols[numbers[4]],backround: $backgrounds[4])
+                        CardView(symbol: $symbols[numbers[5]],backround: $backgrounds[5])
                         
                         Spacer()
                     }
@@ -119,40 +119,20 @@ struct ContentView: View {
                         
                         Spacer()
                         
-                        CardView(symbol: $symbols[numbers[0]],backround: $backgrounds[0])
-                        CardView(symbol: $symbols[numbers[1]],backround: $backgrounds[1])
-                        CardView(symbol: $symbols[numbers[2]],backround: $backgrounds[2])
+                        CardView(symbol: $symbols[numbers[6]],backround: $backgrounds[6])
+                        CardView(symbol: $symbols[numbers[7]],backround: $backgrounds[7])
+                        CardView(symbol: $symbols[numbers[8]],backround: $backgrounds[8])
                         
                         Spacer()
                     }                }
                 Spacer()
-                
+                HStack{
+                    
                 Button {
+                    
                     //
-                    
-         
-                    
-                    self.backgrounds=self.backgrounds.map{ _ in Color.white }
-                    
-                    self.numbers = self.numbers.map({_ in Int.random(in: 0...self.symbols.count - 1)})
-                    
-                    //self.numbers[0] = Int.random(in: 0...self.symbols.count - 1 )
-                    //self.numbers[1] = Int.random(in: 0...self.symbols.count - 1 )
-                    //self.numbers[2] = Int.random(in: 0...self.symbols.count - 1 )
-                    
-                    if self.numbers[0] == self.numbers[1] && self.numbers[1] == self.numbers[2]
-                    {
-                        //win condition
-                        self.credits += betAmount * 10
-                        //update backround to green
-                        
-                        self.backgrounds=self.backgrounds.map{ _ in Color.green }
-                    }
-                    else
-                    {
-                        self.credits -= betAmount
-                    }
-
+                    self.processResults()
+    
                 } label: {
                     Text("Spin")
                         .bold()
@@ -162,14 +142,132 @@ struct ContentView: View {
                         .background(.mint)
                         .cornerRadius(15)
                 }
+                    
+                    Button {
+                        
+                        //
+                        self.processResults(true)
+        
+                    } label: {
+                        Text("Max Spin(5 X Spin)")
+                            .bold()
+                            .foregroundColor(.white)
+                            .padding(.all,10)
+                            .padding([.leading, .trailing],30)
+                            .background(.mint)
+                            .cornerRadius(15)
+                    }
+                       
+                    
+            }
             
                 Spacer()
 
                 
             }
+            
         
             
         }
+        
+    }
+    
+    func processResults(_ isMax:Bool = false){
+        
+        if credits>0{
+        self.backgrounds=self.backgrounds.map{ _ in Color.white }
+        
+        
+        if isMax{
+            
+            //spin all the cards
+            self.numbers = self.numbers.map({_ in Int.random(in: 0...self.symbols.count - 1)})
+
+        }
+        else{
+            
+            //spin the middle row
+            self.numbers[3] = Int.random(in: 0...self.symbols.count - 1 )
+            self.numbers[4] = Int.random(in: 0...self.symbols.count - 1 )
+            self.numbers[5] = Int.random(in: 0...self.symbols.count - 1 )
+        }
+        
+        processWin(isMax)
+            
+        }
+        else{
+            self.credits = 0
+            
+        }
+        
+    }
+    
+    func isMatch(_ index1: Int ,_ index2:Int,_ index3:Int) ->Bool{
+        
+        if self.numbers[index1] == self.numbers[index2] && self.numbers[index2] == self.numbers[index3]{
+            self.backgrounds[index1] = Color.green
+            self.backgrounds[index2] = Color.green
+            self.backgrounds[index3] = Color.green
+            
+        }
+        return false
+    }
+    
+    func processWin(_ isMax: Bool = false){
+        //check the matches
+        
+        var matches = 0
+        if !isMax{
+          
+            //processing for single spin
+            if self.numbers[3] == self.numbers[4] && self.numbers[4] == self.numbers[5]
+            {
+                //win condition
+                matches += 1
+                //update backround to green
+                
+                //self.backgrounds=self.backgrounds.map{ _ in Color.green }
+                self.backgrounds[3] = Color.green
+                self.backgrounds[4] = Color.green
+                self.backgrounds[5] = Color.green
+            }
+            else
+            {
+                self.credits -= betAmount
+            }
+        }else{
+            
+            //processing for single spin
+            
+            //top row
+            if isMatch(0, 1, 2){matches += 1}
+            //middle row
+            if isMatch(3, 4, 5){matches += 1}
+            //last row
+            if isMatch(6, 7, 8){matches += 1}
+            //first diagonal
+            if isMatch(0, 4, 8){matches += 1}
+            //second diagonal
+            if isMatch(2, 4, 6){matches += 1}
+            
+            //chech for number of matches
+            if matches > 0
+            {
+                self.credits += matches * betAmount * 5
+            }
+            
+            else if !isMax
+            {
+                //0 wins, single spin
+                self.credits -= betAmount
+                
+            }else
+            {
+                //0 wins, max spin
+                self.credits -= betAmount * 5
+            }
+        }
+        
         
     }
 }
